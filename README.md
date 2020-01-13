@@ -20,7 +20,25 @@
 
 关于深度学习相关的Deep Neural Networks for YouTube Recommendations的介绍，可以快速入门一下[利用DNN做推荐的实现过程总结](https://zhuanlan.zhihu.com/p/38638747)。
 
-关于深度学习相关的RCNN_GRU的介绍，后续会在我的博客中更新
+关于深度学习相关的RCNN_GRU的介绍，实在没空写博客了，sorry
+
+关于深度学习相关的TextCNN的介绍，实在没空写博客了，sorry
+
+关于深度学习相关的Bert做fine-tune的代码(类似接口，具体实现按照时间项目去改)，我每次做nlp的baseline的时候，都是在这个代码上进行更改，主要是ner和classify两个问题的模版，可以快速入门一下[Bert你需要知道的一些细节](https://github.com/sladesha/Reflection_Summary/tree/master/对外技术分享)
+
+关于深度学习相关的XDeepFM的介绍，可以快速入门一下[xDeepFM架构理解及实现](http://www.shataowei.com/2019/12/17/xDeepFM架构理解及实现/)。
+
+关于深度学习相关的DeepInterestNetwork的介绍，实在没空写博客了，sorry
+
+关于深度学习相关的Estimator框架模版的介绍，原因有三：
+
+- 组内同学开发不规范，tf代码风格包括：slim,keras,contrib,graph各式各样的写法，混乱不好管理
+- 代码逻辑不清晰，随处定义变量，随处定义函数
+- 由tornado服务迁往serving服务，需要更新的更频繁，接受的代码更加简单易上手，不需要高频去查各种tf接口
+
+关于深度学习相关的Doc2Vec的介绍，可以快速入门一下[Distributed Representations of Sentences and Documents](https://cs.stanford.edu/~quocle/paragraph_vector.pdf)
+
+****
 
 # 项目
 ## RNN_applied_classification
@@ -77,8 +95,6 @@ double free or corruption (!prev): 0x0000000001f03dd0 ***
 
 可能感兴趣的其他相关内容：**[FM部分](https://github.com/sladesha/machine_learning/tree/master/FM)**||**[FFM部分](https://github.com/sladesha/machine_learning/tree/master/FFM)**
 
-
-
 ## Deep Neural Networks for YouTube Recommendations
 最近在利用来自google的YouTube团队发表在16年9月的RecSys会议的论文Deep Neural Networks for YouTube Recommendations做用户个性化商品推荐，看到不少论文上的理论总结分析，都很精彩，我手动实现了一遍，总结了一些实际工程中的体会，给大家也给自己一个总结交代。
 ![Deep Neural Networks for YouTube Recommendations](https://upload-images.jianshu.io/upload_images/1129359-67a74922f9908400.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
@@ -92,23 +108,68 @@ record_dataformat_version：在basemodel的基础上，利用record机制存储�
 
 ## RCNN_GRU
 
-RCNN_GRU/model: 初始化模型的脚本
+- RCNN_GRU/model: 初始化模型的脚本
+- RCNN_GRU/process: 数据预处理的脚本
 
-RCNN_GRU/process: 数据预处理的脚本
+## TextCNN
+
+![TextCNN](https://tva1.sinaimg.cn/large/006tNbRwgy1gaqpamko4gj30oz0cgtah.jpg)
+
+在做**黄反广告**文本的识别:
+
+- 初版本是朴素贝叶斯+LR(recall:72%，precision:88%)
+- 优化版是CBOW+LR(recall:77%，precision:88%)
+- 进阶版是CBOW/GLOVE+MLR(recall:85%，precision:91%)
+- 当前版是\[D2V,CBOW,GLOVE]+TextCNN(recall:90%，precision:92%)
+
+## Bert
+Bert+BiLSTM+Crf/FNN，关于Bert的更多可以参考我的[ppt分享](https://github.com/sladesha/Reflection_Summary/tree/master/对外技术分享)
+
+## XDeepFM
+
+**网络结构**
+![](https://tva1.sinaimg.cn/large/006tNbRwgy1ga00gfhqq6j30t80j6di5.jpg)
+
+主要把网络架构梳理了一边，后面项目结束再把整体的工程代码开源出来。
+
+## DeepInterestNetwork
+![](https://tva1.sinaimg.cn/large/006tNbRwgy1ga3b1wqeacj30kc0fr405.jpg)
+
+和常见的网络上的版本不同的有两个地方的修改，我司实际使用上比[官方版本](https://github.com/zhougr1993/DeepInterestNetwork/blob/master/din/model.py)要提升0.2pp的auc：
+
+- dice中的predict的bn过程采取了训练集的期望方差
+- 在fc的过程中用了tf.tanh替代tf.sigmoid/dice/prule
+
+## Estimator框架模版
+
+![](https://tva1.sinaimg.cn/large/006tNbRwgy1gaqpbmup8mj30rx0c875s.jpg)
+
+- data
+    - 数据构造
+    - DataMake.py
+        - 常规构造方法
+    - DeepFmDataMake.py
+        - DeepFM的数据构造
+    - TextCNNDataMake.py
+        - TextCNN的数据构造
+- model
+    - 模型框架
+        - DeepFM
+        - TextCNN
+- serving
+    - docker部署
+    - serving_grpc_client.py
+        - 调用serving服务
+
+Estimator框架重新写了DeepFm和TextCNN，总的来说，代码量差不多只是更加规范化了，以后建议以Estimator框架为模版开发。
+
+## Doc2Vector
+
+来自于[Distributed Representations of Sentences and Documents](https://cs.stanford.edu/~quocle/paragraph_vector.pdf)
 
 # 工具
-- python 3.6
-- tensorflow 1.0.0
-- nltk 3.2.4
-- jieba 0.39
-- data_preprocessing 0.0.2
+
+请参考：[requirements.txt](https://github.com/sladesha/deep_learning/blob/master/requirements.txt)
 
 # 其他
-鄙人才疏学浅，不免有错误的地方，如果你发现了，麻烦通过以下的方式告知：
-- WeChat:sharalion
-- Issue
 - E-mail:stw386@sina.com
-- [Message Board in my bolg](http://shataowei.com)
-- 公众号：ml_trip
-
-![](https://upload-images.jianshu.io/upload_images/1129359-654dc61c581d94e1.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
